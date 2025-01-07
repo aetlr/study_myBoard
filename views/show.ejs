@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        header {
+            background-color: #ffffff;
+            padding: 5px;
+            margin: 0;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        header a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            margin: 0 20px; 
+        }
+
+        th, td {
+            padding: 5px;
+        }
+        .preview {
+            height: 300px;
+            width: 300px;
+            margin: 0px auto;   
+            margin-top: 30px;
+        }
+        table {
+            margin: 0px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <% if (session.loggedIn) { %>
+            <%= session.userId%>님, 안녕하세요
+            <a href="/logout">로그아웃</a>
+        <% } else {%>
+            <a href="/signup">회원가입</a>
+            <a href="/login">로그인</a>
+        <% }%>
+
+        <a href="/upload">업로드</a>
+        <a href="/show">게시판보기</a>
+    </header>
+    
+    <table style="border-collapse: collapse; width: 50%;">
+        <tr style="padding: 10px 5px; margin: 5px; border-bottom: 1px solid black;">
+            <th>업로드 날짜</th>
+            <th>파일 이름</th>
+            <th>업로더</th>
+            <th></th>
+        </tr>
+
+        <% data.forEach((file => { %>
+        <tr style="padding: 10px 5px; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+            <td><%=new Date(file.upload_date).toLocaleString()%></td>
+            <td><%=file.filename%></td>
+            <td><%=file.uploader%></td>
+            <% if (session.loggedIn && session.userId == file.uploader) {%>
+            <td><a href="/delete?id=<%=file.id%>">X</a></td>
+            <% } %>
+
+        </tr>
+        <%}));%>
+
+
+
+    </table>
+    <div class="preview">
+
+    </div>
+
+    <script>
+        const $td = document.getElementsByTagName('td');
+        const tdArray = Array.from($td); 
+        tdArray.forEach(element => {
+            element.addEventListener('click', (event) => {
+                const fileName = event.target.textContent;
+                if (fileName.endsWith('.png') || fileName.endsWith('.jpg')) {
+                    $.ajax({
+                        url: '/image',
+                        method: 'GET',
+                        data: {filename: fileName},
+                        dataType: 'binary',
+                        xhrFields: {
+                            responseType: 'blob'
+                        },
+                        success: (data) => {
+                            const imgUrl = URL.createObjectURL(data);
+                            console.log(imgUrl);
+                            $('.preview').html(`<img src="${imgUrl}" style="width: 300px">`);
+                        },
+                    });
+                }
+            });   
+        });
+    </script>
+</body>
+</html>
